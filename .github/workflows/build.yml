@@ -39,9 +39,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Decode Keystore from Secret (Optional)
-        if: ${{ secrets.SIGNING_KEY != '' }}
         run: |
-          echo "$SIGNING_KEY" | base64 --decode > app/release.jks
+          if [ -n "$SIGNING_KEY" ]; then
+            echo "$SIGNING_KEY" | base64 --decode > app/release.jks
+          fi
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
