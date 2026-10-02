@@ -18,12 +18,41 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = System.getenv("KEYSTORE_FILE")
+            val keystoreFile = when {
+                !keystorePath.isNullOrBlank() -> file(keystorePath)
+                file("release.jks").exists() -> file("release.jks")
+                rootProject.file("release.jks").exists() -> rootProject.file("release.jks")
+                else -> null
+            }
+            if (keystoreFile != null && keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD").takeUnless { it.isNullOrBlank() } ?: "dirtyfrag"
+                keyAlias = System.getenv("KEY_ALIAS").takeUnless { it.isNullOrBlank() } ?: "dirtyfrag"
+                keyPassword = System.getenv("KEY_PASSWORD").takeUnless { it.isNullOrBlank() } ?: "dirtyfrag"
+            }
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            val keystorePath = System.getenv("KEYSTORE_FILE")
+            val keystoreFile = when {
+                !keystorePath.isNullOrBlank() -> file(keystorePath)
+                file("release.jks").exists() -> file("release.jks")
+                rootProject.file("release.jks").exists() -> rootProject.file("release.jks")
+                else -> null
+            }
+            signingConfig = if (keystoreFile != null && keystoreFile.exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
             isMinifyEnabled = false
         }
     }
